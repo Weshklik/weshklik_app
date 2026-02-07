@@ -63,7 +63,7 @@ export const Header: React.FC = () => {
   } else if (isPartnerUniverse) {
     // Espace Partenaire
     contextConfig = {
-      label: 'Service Achat',
+      label: 'Partenaire Achat',
       subLabel: 'Mise en relation',
       icon: Icons.Handshake,
       style: 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
@@ -225,10 +225,10 @@ export const Header: React.FC = () => {
             <Link 
               to="/find-partner"
               className="hidden md:flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              title="Payer sans carte bancaire"
+              title="Devenez Partenaire Achat"
             >
                 <Icons.Handshake className="w-6 h-6" />
-                <span className="text-sm font-medium hidden lg:block">Service Achat</span>
+                <span className="text-sm font-medium hidden lg:block">Partenaire Achat</span>
             </Link>
             
             {!location.pathname.includes('/pro-dashboard') && (

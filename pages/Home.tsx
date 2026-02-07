@@ -86,7 +86,7 @@ export const Home: React.FC = () => {
   const getProCardState = () => {
     if (!isAuthenticated) return { theme: 'neutral', label: 'Espace Pro', cta: 'Découvrir', badge: 'Pro' };
     if (user?.type === 'pro') return { theme: 'green', label: 'Espace Pro', cta: 'Mon Dashboard', badge: 'Actif' };
-    return { theme: 'violet', label: 'Espace Pro', cta: 'Ouvrir mon Store', badge: 'Passer Pro' };
+    return { theme: 'blue', label: 'Espace Pro', cta: 'Ouvrir mon Store', badge: 'Passer Pro' };
   };
 
   const getImportCardState = () => {
