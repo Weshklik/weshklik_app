@@ -1,24 +1,94 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Icons } from '../components/Icons';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, AuthUser } from '../context/AuthContext';
 import { useProPackState } from '../hooks/useProPackState';
 import { useSectorRules } from '../hooks/useSectorRules';
 
 type PricingCategory = 'auto' | 'immo' | 'services';
 
+// --- PURE HELPER FUNCTIONS (Business Logic Source of Truth) ---
+
+// TODO: remove legacy user.sector fallback once migration to user.sectors[] is complete
+function getProAllowedTabs(user: AuthUser | null): PricingCategory[] {
+    // Public/Guest or Individual -> Show ALL tabs to discover pricing
+    if (!user || user.type !== 'pro') {
+        return ['auto', 'immo', 'services'];
+    }
+    
+    const sectors = user.sectors || (user.sector ? [user.sector] : []);
+    const allowed: PricingCategory[] = [];
+
+    // Map Sectors to Pricing Tabs
+    if (sectors.some(s => ['auto_vente', 'auto_location', 'auto_import'].includes(s))) {
+        allowed.push('auto');
+    }
+    if (sectors.some(s => s === 'immobilier')) {
+        allowed.push('immo');
+    }
+    if (sectors.some(s => ['retail', 'services'].includes(s))) {
+        allowed.push('services');
+    }
+
+    // Safety Fallback: if pro has no known sectors, show all (should not happen in prod)
+    return allowed.length > 0 ? allowed : ['auto', 'immo', 'services'];
+}
+
+function resolveDefaultTab(user: AuthUser | null): PricingCategory {
+    const allowed = getProAllowedTabs(user);
+    
+    // Priority Rule for Multi-sector: Auto > Immo > Services
+    if (allowed.includes('auto')) return 'auto';
+    if (allowed.includes('immo')) return 'immo';
+    if (allowed.includes('services')) return 'services';
+    
+    return 'auto'; // Fallback
+}
+
+// SMART RECOMMENDATION LOGIC
+function getRecommendedPlanId(category: PricingCategory, user: AuthUser | null): string {
+    // Default recommendation
+    if (!user) return 'silver';
+
+    const sectors = user.sectors || [];
+
+    if (category === 'auto') {
+        // Import experts or big dealers -> Gold
+        if (sectors.includes('auto_import') || sectors.includes('concessionnaire')) {
+            return 'gold';
+        }
+        return 'silver';
+    }
+
+    if (category === 'immo') {
+        // Agencies usually need visibility -> Silver is good start, Gold for big promoters
+        if (sectors.includes('promoteur')) return 'gold';
+        return 'silver';
+    }
+
+    // Default for Retail/Services
+    return 'silver';
+}
+
 export const ProPlans: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, updateProPack, isAuthenticated } = useAuth();
   
   // States & Context
   const { packCode, status } = useProPackState(); // packCode is internal (free/silver/gold)
   const { importAutoAllowed } = useSectorRules();
 
-  // Pricing State
-  const [activeCategory, setActiveCategory] = useState<PricingCategory>('auto');
+  // Pricing State - Initialized safely based on user context
+  const [activeCategory, setActiveCategory] = useState<PricingCategory>(() => resolveDefaultTab(user));
   
+  // Computed: Allowed Tabs for this specific user
+  const allowedTabs = useMemo(() => getProAllowedTabs(user), [user]);
+  
+  // Computed: Recommended Plan
+  const recommendedPlanId = useMemo(() => getRecommendedPlanId(activeCategory, user), [activeCategory, user]);
+
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteSent, setQuoteSent] = useState(false);
@@ -32,18 +102,30 @@ export const ProPlans: React.FC = () => {
     apiInterest: false
   });
 
-  // Auto-detect category based on user sector
+  // --- GUARD: Strict Consistency Check ---
+  // If the active tab is not allowed for the current user (e.g. after update), force switch.
   useEffect(() => {
-    if (user?.sector) {
-       if (['auto_vente', 'auto_location', 'transport_logistique'].includes(user.sector)) {
-         setActiveCategory('auto');
-       } else if (['immobilier', 'tourisme'].includes(user.sector)) {
-         setActiveCategory('immo');
-       } else {
-         setActiveCategory('services');
-       }
+    if (!allowedTabs.includes(activeCategory)) {
+        const correctTab = resolveDefaultTab(user);
+        console.warn(`[ProPlans] Restricted access to tab '${activeCategory}'. Switching to '${correctTab}'.`);
+        setActiveCategory(correctTab);
     }
-  }, [user]);
+  }, [user, allowedTabs, activeCategory]);
+
+  // Robust Back Handler
+  const handleBack = () => {
+      // If we have history state (navigation within app), go back
+      if (location.key !== 'default') {
+          navigate(-1);
+      } else {
+          // Fallback if accessed directly or refreshed
+          if (user?.type === 'pro') {
+              navigate('/pro-dashboard');
+          } else {
+              navigate('/');
+          }
+      }
+  };
 
   // Action Handler
   const handleSelectPack = (packId: 'free' | 'silver' | 'gold') => {
@@ -145,7 +227,7 @@ export const ProPlans: React.FC = () => {
       subTextColor: 'text-gray-600 dark:text-gray-300',
       featureIconColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
       buttonStyle: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30',
-      highlight: true
+      highlight: recommendedPlanId === 'silver'
     },
     {
       id: 'gold',
@@ -166,7 +248,8 @@ export const ProPlans: React.FC = () => {
       subTextColor: 'text-gray-600 dark:text-gray-300',
       featureIconColor: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300',
       buttonStyle: 'bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20',
-      isImport: importAutoAllowed 
+      isImport: importAutoAllowed,
+      highlight: recommendedPlanId === 'gold'
     },
     {
       id: 'premium',
@@ -206,22 +289,22 @@ export const ProPlans: React.FC = () => {
       
       {/* Header Fixe - Clarification Immédiate */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto flex items-center">
-            <button 
-                onClick={() => navigate(-1)} 
-                className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group"
-            >
-                <div className="p-2 rounded-full group-hover:bg-gray-100 dark:group-hover:bg-gray-800 transition-colors">
-                    <Icons.ArrowLeft className="w-5 h-5" />
-                </div>
-                <span className="font-bold text-sm uppercase tracking-wide">Retour</span>
-            </button>
-            
-            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-4"></div>
-            
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                Packs & Tarifs
-            </h1>
+        <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center">
+                <button 
+                    onClick={handleBack} 
+                    className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-xl transition-all border border-gray-200 dark:border-gray-700 group"
+                >
+                    <Icons.ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    <span className="font-bold text-sm">Retour</span>
+                </button>
+                
+                <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-4 hidden md:block"></div>
+                
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    Packs & Tarifs
+                </h1>
+            </div>
         </div>
       </div>
 
@@ -239,29 +322,32 @@ export const ProPlans: React.FC = () => {
             </p>
         </section>
 
-        {/* --- 2. CATEGORY SELECTOR --- */}
-        <section className="flex justify-center">
-            <div className="inline-flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shadow-inner">
-                {(Object.keys(PRICING_CONFIG) as PricingCategory[]).map((cat) => {
-                    const isActive = activeCategory === cat;
-                    const config = PRICING_CONFIG[cat];
-                    return (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-                                isActive 
-                                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-white shadow-sm' 
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                            }`}
-                        >
-                            <config.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600 dark:text-white' : ''}`} />
-                            {config.label}
-                        </button>
-                    );
-                })}
-            </div>
-        </section>
+        {/* --- 2. CATEGORY SELECTOR (Filtered by Allowed Tabs) --- */}
+        {/* Only show selector if user has access to more than 1 category */}
+        {allowedTabs.length > 1 && (
+            <section className="flex justify-center">
+                <div className="inline-flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shadow-inner">
+                    {allowedTabs.map((cat) => {
+                        const isActive = activeCategory === cat;
+                        const config = PRICING_CONFIG[cat];
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
+                                    isActive 
+                                    ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-white shadow-sm' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                <config.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600 dark:text-white' : ''}`} />
+                                {config.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </section>
+        )}
 
         {/* --- 3. PACKS GRID (4 Columns on Desktop) --- */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
@@ -269,6 +355,7 @@ export const ProPlans: React.FC = () => {
                 const isCurrent = packCode === plan.id;
                 const canRenew = isCurrent && (status === 'expired' || status === 'expiring');
                 const isButtonDisabled = isCurrent && !canRenew && !plan.isQuote;
+                const isRecommended = plan.highlight;
                 
                 return (
                 <div 
@@ -276,11 +363,11 @@ export const ProPlans: React.FC = () => {
                     className={`
                         relative rounded-3xl p-6 flex flex-col transition-all duration-300 border-2
                         ${plan.color} ${plan.bg} 
-                        ${plan.highlight ? 'shadow-xl ring-4 ring-blue-500/10 scale-[1.02] z-10' : 'shadow-sm hover:shadow-md'}
+                        ${isRecommended ? 'shadow-xl ring-4 ring-blue-500/10 scale-[1.02] z-10' : 'shadow-sm hover:shadow-md'}
                     `}
                 >
                     {/* Badge Recommandé */}
-                    {plan.highlight && (
+                    {isRecommended && (
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-lg flex items-center gap-1 whitespace-nowrap">
                             <Icons.Star className="w-3 h-3 fill-white" /> Recommandé
                         </div>

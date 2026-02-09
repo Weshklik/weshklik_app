@@ -78,7 +78,12 @@ import {
   TestTube,
   Handshake,
   Repeat,
-  ExternalLink
+  ExternalLink,
+  Mic,
+  Eye,
+  RotateCcw,
+  UserCheck,
+  Package
 } from 'lucide-react';
 
 export const Icons = {
@@ -160,5 +165,10 @@ export const Icons = {
   TestTube,
   Handshake,
   Repeat,
-  ExternalLink
+  ExternalLink,
+  Mic,
+  Eye,
+  RotateCcw,
+  UserCheck,
+  Package
 };

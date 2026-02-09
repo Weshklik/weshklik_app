@@ -1,6 +1,6 @@
 
 import { AuthUser } from '../context/AuthContext';
-import { SECTOR_RULES } from '../data';
+import { SECTOR_RULES, PACK_CAPABILITIES } from '../data';
 import { FeatureAccessResult } from '../types';
 
 /**
@@ -49,12 +49,20 @@ export const canUseFeature = (
     };
   }
 
-  const rules = SECTOR_RULES[user.sector];
-  const userPack = user.package_slug || 'free';
+  const sectorRule = SECTOR_RULES[user.sector];
+  const userPackSlug = user.package_slug || 'free';
+  const packCapabilities = PACK_CAPABILITIES[userPackSlug];
+
+  // If pack definition is missing (should not happen), fallback to free
+  if (!packCapabilities) {
+      console.warn(`[BusinessRules] Unknown pack '${userPackSlug}', falling back to free.`);
+      return { allowed: false, message: "Erreur configuration pack." };
+  }
 
   // 2. Logic for Import Auto
   if (feature === 'import_auto') {
-    if (!rules.importAutoAllowed) {
+    // Check Sector Permission
+    if (!sectorRule.importAutoAllowed) {
       return {
         allowed: false,
         reason: 'SECTOR_RESTRICTED',
@@ -62,19 +70,29 @@ export const canUseFeature = (
         message: "L'importation de véhicules n'est pas disponible pour votre secteur d'activité."
       };
     }
+    // Check Pack Capability
+    if (!packCapabilities.importAutoAccess) {
+        return {
+            allowed: false,
+            reason: 'PACK_REQUIRED',
+            title: 'Option Import Auto',
+            message: "Votre pack actuel ne permet pas la gestion des demandes d'import.\n\n👉 Passez à un pack Silver ou Gold."
+        };
+    }
+
     // Allowed
     return {
       allowed: true,
       reason: 'OK',
       redirect: '/import-request',
-      message: "Soumettez votre demande d’import. Un professionnel vous contactera." // Intro message context
+      message: "Soumettez votre demande d’import. Un professionnel vous contactera." 
     };
   }
 
   // 3. Logic for Import CSV
   if (feature === 'import_csv') {
     // A. Check Sector
-    if (rules.csvImportMinPack === 'none') {
+    if (sectorRule.csvImportMinPack === 'none') {
       return {
         allowed: false,
         reason: 'SECTOR_RESTRICTED',
@@ -83,17 +101,8 @@ export const canUseFeature = (
       };
     }
 
-    // B. Check Pack Level
-    // Pack hierarchy: free < silver < gold
-    const packLevels = { 'free': 0, 'silver': 1, 'gold': 2 };
-    const userLevel = packLevels[userPack as keyof typeof packLevels] || 0;
-    
-    // Determine min level required based on sector rule
-    let minLevel = 0;
-    if (rules.csvImportMinPack === 'silver') minLevel = 1;
-    if (rules.csvImportMinPack === 'gold') minLevel = 2;
-
-    if (userLevel < minLevel) {
+    // B. Check Pack Capability
+    if (!packCapabilities.importCsvAllowed) {
       return {
         allowed: false,
         reason: 'PACK_REQUIRED',

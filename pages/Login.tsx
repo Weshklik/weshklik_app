@@ -140,7 +140,7 @@ export const Login: React.FC = () => {
               onClick={() => setActiveTab('individual')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${
                 activeTab === 'individual'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
@@ -275,32 +275,38 @@ export const Login: React.FC = () => {
         <div className="mt-8 max-w-md w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 border-l-4 border-l-yellow-500">
            <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 text-center flex items-center justify-center gap-2">
              <Icons.Wrench className="w-3 h-3" />
-             ZONE DE TEST (QA)
+             ACCÈS RAPIDE (STORES MOCK)
            </h4>
            <div className="grid grid-cols-2 gap-2">
               <button 
-                  onClick={() => handleDebugLogin('test_auto_import')} 
-                  className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
-              >
-                  <Icons.Check className="w-3 h-3" /> Auto Import (Certifié)
-              </button>
-              <button 
-                  onClick={() => handleDebugLogin('test_auto_local')} 
-                  className="bg-gray-700 hover:bg-gray-600 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
-              >
-                  <Icons.X className="w-3 h-3" /> Auto Local (Bloqué)
-              </button>
-              <button 
-                  onClick={() => handleDebugLogin('test_immo')} 
+                  onClick={() => handleDebugLogin('u1')} 
                   className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
               >
-                  <Icons.Home className="w-3 h-3" /> Immo (Bloqué Auto)
+                  <Icons.Car className="w-3 h-3" /> Auto Luxe (Gold)
+              </button>
+              <button 
+                  onClick={() => handleDebugLogin('u_import')} 
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
+              >
+                  <Icons.Plane className="w-3 h-3" /> Expert Import (Gold)
+              </button>
+              <button 
+                  onClick={() => handleDebugLogin('u2')} 
+                  className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
+              >
+                  <Icons.Home className="w-3 h-3" /> Immo Prestige (Silver)
+              </button>
+              <button 
+                  onClick={() => handleDebugLogin('u4')} 
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
+              >
+                  <Icons.Laptop className="w-3 h-3" /> Tech Store (Free)
               </button>
               <button 
                   onClick={() => { login('individual'); navigate('/'); }} 
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1"
+                  className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1 col-span-2"
               >
-                  <Icons.User className="w-3 h-3" /> Particulier
+                  <Icons.User className="w-3 h-3" /> Compte Particulier
               </button>
            </div>
         </div>
