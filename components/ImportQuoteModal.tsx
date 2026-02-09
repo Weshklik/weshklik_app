@@ -132,7 +132,7 @@ export const ImportQuoteModal: React.FC<ImportQuoteModalProps> = ({ isOpen, onCl
                     </button>
                     <button 
                         onClick={onClose}
-                        className="w-full py-3.5 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl"
+                        className="w-full py-3.5 text-gray-700 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
                     >
                         Fermer
                     </button>

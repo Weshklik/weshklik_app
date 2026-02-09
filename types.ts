@@ -2,7 +2,7 @@
 export interface DynamicField {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'radio' | 'date';
+  type: 'text' | 'number' | 'select' | 'radio' | 'date' | 'checkbox';
   options?: string[];
   required?: boolean;
   suffix?: string;
@@ -35,6 +35,7 @@ export interface ProSector {
   icon: string;
   categories: ProCategory[];
   tags?: ('premium' | 'restricted')[];
+  capabilities?: string[]; // e.g. 'IMPORT_AUTO'
 }
 
 // Phase 2: Rules per Sector
@@ -44,6 +45,18 @@ export interface SectorRule {
   csvImportMinPack: 'none' | 'silver' | 'gold'; // Min pack required for CSV
   manualValidation: boolean; // Requires admin validation before publishing
   allowedCategories: string[]; // Strict list of allowed Marketplace Category IDs
+  allowedSubCategories?: string[]; // NEW: Strict list of allowed SubCategory IDs (if undefined, all allowed)
+}
+
+// Phase 2.5: Pack Capabilities (Strict Feature Gating)
+export interface PackCapabilities {
+  maxActiveListings: number; // -1 for unlimited
+  importCsvAllowed: boolean;
+  importAutoAccess: boolean; // Depends on sector AND pack
+  boostsPerMonth: number;
+  prioritySupport: boolean;
+  apiAccess: boolean;
+  canManageTeam: boolean;
 }
 
 // Phase 3: Feature Logic Response
@@ -59,7 +72,7 @@ export interface FeatureAccessResult {
 export type ProPackStatus = 'active' | 'expiring' | 'expired' | 'free';
 
 export interface ProPackState {
-  packCode: 'free' | 'silver' | 'gold';
+  packCode: 'free' | 'silver' | 'gold' | 'premium';
   packName: string;
   startedAt: string | null;
   expiresAt: string | null;
@@ -174,11 +187,11 @@ export interface StoreProfile extends User {
   phone: string;
   openingHours?: string;
   // Phase 1: SaaS Fields
-  package_slug?: 'free' | 'silver' | 'gold';
+  package_slug?: 'free' | 'silver' | 'gold' | 'premium';
   package_updated_at?: string;
   package_expires_at?: string;
   // Phase 1.5: Sector Data
-  sector?: string;
+  sectors?: string[]; // CHANGED: Multiple sectors support (e.g. Auto Vente + Auto Location)
   categories?: string[];
 }
 

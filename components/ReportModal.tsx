@@ -79,7 +79,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSub
         <div className="flex gap-3">
             <button 
                 onClick={onClose}
-                className="flex-1 py-3 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                className="flex-1 py-3 text-gray-700 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors"
             >
                 Annuler
             </button>
