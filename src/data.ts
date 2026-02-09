@@ -1,5 +1,5 @@
 
-import { Category, Listing, User, StoreProfile, ProSector, SectorRule, PartnerProfile, ImportRequest, Transaction, Payout, Review, Wilaya, PackCapabilities } from './types';
+import { Category, Listing, User, StoreProfile, ProSector, SectorRule, PartnerProfile, ImportRequest, Transaction, Payout, Review, Wilaya } from './types';
 
 // Constants for sellers to use in listings
 export const SELLER_INDIVIDUAL: User = {
@@ -16,46 +16,6 @@ export const SELLER_INDIVIDUAL_2: User = {
   type: 'individual',
   verified: true,
   avatar: 'https://ui-avatars.com/api/?name=Karim&background=random'
-};
-
-// --- PRO PACK DEFINITIONS (SOURCE OF TRUTH) ---
-export const PACK_CAPABILITIES: Record<string, PackCapabilities> = {
-  'free': {
-    maxActiveListings: 2,
-    importCsvAllowed: false,
-    importAutoAccess: false,
-    boostsPerMonth: 0,
-    prioritySupport: false,
-    apiAccess: false,
-    canManageTeam: false
-  },
-  'silver': {
-    maxActiveListings: 50,
-    importCsvAllowed: true, // Limited in backend, allowed in UI
-    importAutoAccess: true,
-    boostsPerMonth: 0,
-    prioritySupport: true,
-    apiAccess: false,
-    canManageTeam: false
-  },
-  'gold': {
-    maxActiveListings: 200,
-    importCsvAllowed: true,
-    importAutoAccess: true,
-    boostsPerMonth: 3,
-    prioritySupport: true,
-    apiAccess: false, // On request only
-    canManageTeam: true
-  },
-  'premium': {
-    maxActiveListings: -1, // Unlimited
-    importCsvAllowed: true,
-    importAutoAccess: true,
-    boostsPerMonth: 10,
-    prioritySupport: true,
-    apiAccess: true,
-    canManageTeam: true
-  }
 };
 
 export const MOCK_STORES: Record<string, StoreProfile> = {
@@ -78,26 +38,6 @@ export const MOCK_STORES: Record<string, StoreProfile> = {
     package_slug: 'gold',
     sectors: ['auto_vente'],
     categories: ['concessionnaire']
-  },
-  'u_import': {
-    id: 'u_import',
-    name: 'Euro Cars Import',
-    type: 'pro',
-    verified: true,
-    avatar: 'https://ui-avatars.com/api/?name=Euro+Cars&background=4f46e5&color=fff',
-    cover: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1200',
-    bio: 'Importation de véhicules neufs et occasion d\'Allemagne et France. Service clé en main.',
-    location: 'Alger Port',
-    rating: 4.9,
-    reviewCount: 88,
-    responseRate: '100%',
-    responseTime: '< 1h',
-    memberSince: '2023',
-    badges: ['Pro Vérifié', 'Expert Import'],
-    phone: '0550998877',
-    package_slug: 'gold',
-    sectors: ['auto_import'],
-    categories: ['mandataire']
   },
   'u2': {
     id: 'u2',
@@ -382,17 +322,6 @@ export const PRO_SECTORS: ProSector[] = [
       { id: 'revendeur', label: 'Revendeur Multimarque' },
       { id: 'pieces_auto', label: 'Pièces Détachées' }
     ],
-    capabilities: ['IMPORT_AUTO']
-  },
-  {
-    id: 'auto_import',
-    label: 'Importateur Auto',
-    icon: 'Plane',
-    categories: [
-      { id: 'mandataire', label: 'Mandataire Auto' },
-      { id: 'transitaire', label: 'Transitaire' }
-    ],
-    tags: ['premium'],
     capabilities: ['IMPORT_AUTO']
   },
   {

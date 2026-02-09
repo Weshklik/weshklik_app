@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
  * It decides where the user goes based on their state.
  * 
  * Logic:
- * 1. Guest -> Login (with Pro intent)
+ * 1. Guest -> Create Store (Intercepted by Auth Guard -> Login -> Create Store)
  * 2. Auth + No Store (Individual) -> Create Store
  * 3. Auth + Has Store (Pro) -> Pro Dashboard
  */
@@ -20,14 +20,10 @@ export const ProEntry: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      // Cas 1: Guest -> Login -> then Create Store
-      navigate('/login', { 
-        state: { 
-          intent: 'pro', 
-          from: '/create-store' 
-        }, 
-        replace: true 
-      });
+      // Cas 1: Guest -> Create Store
+      // Redirection directe vers create-store.
+      // Le ProtectedRoute va intercepter et rediriger vers /login avec le bon state 'from'.
+      navigate('/create-store', { replace: true });
     } else if (user?.type === 'pro') {
       // Cas 3: Pro -> Dashboard
       navigate('/pro-dashboard', { replace: true });

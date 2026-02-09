@@ -14,7 +14,7 @@ export const CreateStore: React.FC = () => {
 
   const [formData, setFormData] = useState({
     storeName: '',
-    sector: '',
+    sectors: [] as string[], // Changed to Array
     categories: [] as string[],
     slogan: '',
     rcNumber: '',
@@ -41,12 +41,29 @@ export const CreateStore: React.FC = () => {
     }
   };
 
-  const handleSectorSelect = (sectorId: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      sector: sectorId, 
-      categories: [] // Reset categories when sector changes
-    }));
+  const toggleSector = (sectorId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.sectors.includes(sectorId);
+      let newSectors = [];
+      if (isSelected) {
+        newSectors = prev.sectors.filter(s => s !== sectorId);
+      } else {
+        if (prev.sectors.length >= 3) return prev; // Max 3 sectors
+        newSectors = [...prev.sectors, sectorId];
+      }
+      
+      // When deselecting a sector, remove its categories
+      if (isSelected) {
+          const sectorCats = PRO_SECTORS.find(s => s.id === sectorId)?.categories.map(c => c.id) || [];
+          return {
+              ...prev,
+              sectors: newSectors,
+              categories: prev.categories.filter(c => !sectorCats.includes(c))
+          };
+      }
+      
+      return { ...prev, sectors: newSectors };
+    });
   };
 
   const toggleCategory = (catId: string) => {
@@ -55,7 +72,7 @@ export const CreateStore: React.FC = () => {
       if (isSelected) {
         return { ...prev, categories: prev.categories.filter(c => c !== catId) };
       } else {
-        if (prev.categories.length >= 5) return prev; // Max 5 limit
+        if (prev.categories.length >= 10) return prev; // Global limit
         return { ...prev, categories: [...prev.categories, catId] };
       }
     });
@@ -65,7 +82,7 @@ export const CreateStore: React.FC = () => {
     if (currentStep === 1) {
       return (
         formData.storeName.length > 3 && 
-        formData.sector !== '' && 
+        formData.sectors.length > 0 && 
         formData.categories.length > 0 &&
         formData.phone.length >= 10
       );
@@ -106,11 +123,7 @@ export const CreateStore: React.FC = () => {
       }
   };
 
-  const currentSector = PRO_SECTORS.find(s => s.id === formData.sector);
-
-  if (step === 4) {
-    return null; // Should not happen due to redirect
-  }
+  const selectedSectorsData = PRO_SECTORS.filter(s => formData.sectors.includes(s.id));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col transition-colors duration-300">
@@ -142,11 +155,11 @@ export const CreateStore: React.FC = () => {
                 <Icons.Store className="w-8 h-8" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Identité du Store</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Commencez par les informations publiques de votre commerce.</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Définissez votre enseigne et vos activités.</p>
             </div>
 
             <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-6">
-              {/* Form Content Omitted for brevity, logic remains same */}
+              
               {/* Logo Upload */}
               <div className="flex justify-center mb-6">
                  <div 
@@ -183,65 +196,65 @@ export const CreateStore: React.FC = () => {
                 />
               </div>
 
-              {/* SECTOR & CATEGORIES SELECTION */}
+              {/* SECTOR MULTI-SELECTION */}
               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Secteur d'activité <span className="text-red-500">*</span></label>
+                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secteurs d'activité (Max 3) <span className="text-red-500">*</span></label>
                  
-                 {!formData.sector ? (
-                   // Sector Grid Selection
-                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                 <div className="grid grid-cols-2 gap-3 mb-4">
                      {PRO_SECTORS.map((sector) => {
                        const Icon = Icons[sector.icon as keyof typeof Icons] || Icons.Store;
+                       const isSelected = formData.sectors.includes(sector.id);
                        return (
                          <button
                            key={sector.id}
-                           onClick={() => handleSectorSelect(sector.id)}
-                           className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-center gap-2 group"
+                           onClick={() => toggleSector(sector.id)}
+                           className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-center gap-2 group ${
+                               isSelected 
+                               ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' 
+                               : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                           }`}
                          >
-                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 group-hover:bg-white dark:group-hover:bg-gray-700 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                               <Icon className="w-6 h-6" />
+                            <div className={`p-2 rounded-full ${isSelected ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                               <Icon className="w-5 h-5" />
                             </div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{sector.label}</span>
+                            <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-900 dark:text-indigo-200' : 'text-gray-700 dark:text-gray-300'}`}>{sector.label}</span>
                          </button>
                        );
                      })}
-                   </div>
-                 ) : (
-                   // Selected Sector View & Categories
-                   <div className="space-y-4 animate-in fade-in">
-                      <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl">
-                         <div className="flex items-center gap-3">
-                            {(() => {
-                               const Icon = Icons[currentSector?.icon as keyof typeof Icons] || Icons.Store;
-                               return <Icon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
-                            })()}
-                            <span className="font-bold text-indigo-900 dark:text-indigo-200 text-sm">{currentSector?.label}</span>
-                         </div>
-                         <button onClick={() => setFormData(prev => ({ ...prev, sector: '', categories: [] }))} className="text-xs text-indigo-600 dark:text-indigo-400 underline">Modifier</button>
-                      </div>
+                 </div>
 
-                      <div>
-                         <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase">Sélectionnez vos activités (Max 5)</label>
-                         <div className="flex flex-wrap gap-2">
-                            {currentSector?.categories.map(cat => {
-                               const isSelected = formData.categories.includes(cat.id);
-                               return (
-                                 <button
-                                   key={cat.id}
-                                   onClick={() => toggleCategory(cat.id)}
-                                   className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                                      isSelected
-                                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
-                                   }`}
-                                 >
-                                    {cat.label}
-                                 </button>
-                               );
-                            })}
-                         </div>
-                         {formData.categories.length === 0 && <p className="text-xs text-red-500 mt-2">Veuillez sélectionner au moins une catégorie.</p>}
+                 {/* CATEGORIES FOR SELECTED SECTORS */}
+                 {formData.sectors.length > 0 && (
+                   <div className="space-y-4 animate-in fade-in bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Spécialités</label>
+                      <div className="space-y-4">
+                        {selectedSectorsData.map(sector => (
+                            <div key={sector.id}>
+                                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                                    <Icons.ChevronRight className="w-3 h-3" /> {sector.label}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {sector.categories.map(cat => {
+                                        const isSelected = formData.categories.includes(cat.id);
+                                        return (
+                                            <button
+                                            key={cat.id}
+                                            onClick={() => toggleCategory(cat.id)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                                                isSelected
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
+                                            }`}
+                                            >
+                                                {cat.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                       </div>
+                      {formData.categories.length === 0 && <p className="text-xs text-red-500 mt-2">Veuillez sélectionner au moins une spécialité.</p>}
                    </div>
                  )}
               </div>
@@ -256,10 +269,6 @@ export const CreateStore: React.FC = () => {
                   placeholder="0550 00 00 00"
                   className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white"
                 />
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-1">
-                  <Icons.Info className="w-3 h-3" />
-                  L’adresse email de contact du Store est celle de votre compte professionnel.
-                </p>
               </div>
 
               <div>
@@ -277,7 +286,7 @@ export const CreateStore: React.FC = () => {
           </div>
         )}
 
-        {/* Step 2: Legal Info */}
+        {/* Step 2: Legal Info (Unchanged Logic, just rendering) */}
         {step === 2 && (
           <div className="space-y-6 animate-in slide-in-from-right duration-300">
              {/* Content logic same as original, just ensuring correct wrapping */}
@@ -389,16 +398,19 @@ export const CreateStore: React.FC = () => {
 
                   <div className="mt-6 space-y-3 border-t border-gray-100 dark:border-gray-800 pt-4">
                      <div className="flex justify-between py-1">
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">Secteur</span>
-                        <span className="font-medium text-gray-900 dark:text-white text-sm capitalize">{currentSector?.label}</span>
-                     </div>
-                     <div className="flex justify-between py-1">
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">Catégories</span>
-                        <span className="font-medium text-gray-900 dark:text-white text-sm text-right max-w-[50%] truncate">
-                            {formData.categories.map(c => currentSector?.categories.find(cat => cat.id === c)?.label).join(', ')}
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Secteurs</span>
+                        <span className="font-medium text-gray-900 dark:text-white text-sm text-right">
+                            {selectedSectorsData.map(s => s.label).join(', ')}
                         </span>
                      </div>
-                     {/* ... more fields ... */}
+                     <div className="flex justify-between py-1">
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Spécialités</span>
+                        <span className="font-medium text-gray-900 dark:text-white text-sm text-right max-w-[50%] truncate">
+                            {formData.categories.map(c => 
+                                selectedSectorsData.flatMap(s => s.categories).find(cat => cat.id === c)?.label
+                            ).join(', ')}
+                        </span>
+                     </div>
                   </div>
                </div>
             </div>

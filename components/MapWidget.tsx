@@ -6,8 +6,9 @@ interface MapWidgetProps {
   environment?: string; // e.g., 'Mer / Plage', 'Sud / Sahara'
   wilayaCode?: string | null;
   communeName?: string | null;
-  listingCount: number;
+  listingCount?: number;
   price?: number; // Optional specific price for single listing detail view
+  listings?: { price: number }[]; // Real data from search results
 }
 
 // Coordinates for Environments
@@ -73,7 +74,7 @@ const WILAYA_COORDS: Record<string, { lat: number; lng: number; zoom: number }> 
   '48': { lat: 35.74, lng: 0.55, zoom: 9 }, // Relizane
 };
 
-export const MapWidget: React.FC<MapWidgetProps> = ({ environment, wilayaCode, communeName, listingCount, price }) => {
+export const MapWidget: React.FC<MapWidgetProps> = ({ environment, wilayaCode, communeName, listingCount = 0, price, listings }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
 
@@ -126,20 +127,37 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ environment, wilayaCode, c
       }
     });
 
-    // Add Markers
-    // If price is provided, we assume single listing mode -> 1 marker at center
-    const isSingleMode = price !== undefined;
-    const markersToRender = isSingleMode ? 1 : Math.min(listingCount, 15);
+    // --- MARKER GENERATION LOGIC ---
+    // Mode 1: Single Price (Product Detail)
+    // Mode 2: Real Listings (Search Results)
+    // Mode 3: Fallback Random (Legacy/Mock)
+    
+    let markersData: { price: number }[] = [];
 
-    for (let i = 0; i < markersToRender; i++) {
+    if (price !== undefined) {
+        markersData = [{ price }];
+    } else if (listings && listings.length > 0) {
+        markersData = listings.map(l => ({ price: l.price }));
+    } else {
+        const count = listingCount || 0;
+        markersData = Array.from({ length: Math.min(count, 15) }).map(() => ({
+            price: Math.floor(Math.random() * 50 + 5) * 1000
+        }));
+    }
+
+    // Limit to reasonable amount for this mock map component
+    markersData = markersData.slice(0, 20);
+
+    markersData.forEach((item) => {
       // Random offset radius based on zoom level (tighter for higher zoom)
-      // If single mode, use 0 offset
-      const spread = isSingleMode ? 0 : 0.5 / Math.pow(2, target.zoom - 8); 
+      // If single mode (price defined), use 0 offset to center exactly
+      const isSingle = price !== undefined;
+      const spread = isSingle ? 0 : 0.5 / Math.pow(2, target.zoom - 8); 
       
       const latOffset = (Math.random() - 0.5) * spread;
       const lngOffset = (Math.random() - 0.5) * spread;
       
-      const displayPrice = isSingleMode ? price : Math.floor(Math.random() * 50 + 5) * 1000;
+      const displayPrice = item.price;
 
       const iconHtml = `
         <div style="background-color: white; padding: 4px 8px; border-radius: 12px; border: 1px solid #3b82f6; font-weight: bold; font-size: 10px; color: #1d4ed8; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap;">
@@ -157,10 +175,10 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ environment, wilayaCode, c
       L.marker([target.lat + latOffset, target.lng + lngOffset], { icon: customIcon })
         .addTo(mapInstance.current)
         .bindPopup(`<b>${currentLabel}</b><br>${displayPrice?.toLocaleString()} DA`);
-    }
+    });
 
     return () => {};
-  }, [environment, wilayaCode, communeName, listingCount, price]);
+  }, [environment, wilayaCode, communeName, listingCount, price, listings]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6 transition-all duration-300">
@@ -173,7 +191,12 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ environment, wilayaCode, c
                 Localisation : {currentLabel}
             </span>
          </div>
-         <span className="text-xs text-gray-500">{price ? 'Emplacement approximatif' : `${listingCount} biens trouvés`}</span>
+         <span className="text-xs text-gray-500">
+            {price 
+                ? 'Emplacement approximatif' 
+                : `${listings ? listings.length : listingCount} biens trouvés`
+            }
+         </span>
       </div>
       <div className="h-48 md:h-64 w-full relative z-0">
          <div ref={mapRef} className="w-full h-full" />

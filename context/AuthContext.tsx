@@ -12,7 +12,8 @@ export interface AuthUser extends User {
   package_updated_at?: string;
   package_expires_at?: string;
   // Phase 1.5: Sector Data
-  sector?: string;
+  sectors?: string[]; // CHANGED: Array support
+  sector?: string; // DEPRECATED: Kept for legacy compatibility during migration
   categories?: string[];
   
   // Partner Module Specifics
@@ -55,11 +56,11 @@ const MOCK_PRO_USER: AuthUser = {
   verified: true,
   storeId: 'u1',
   package_slug: 'free', // Default
-  sector: 'auto_vente', // UPDATED DEFAULT
+  sectors: ['auto_vente'], // Default
   categories: ['concessionnaire']
 };
 
-// Mock Partner User (for testing Step 3 directly if needed)
+// Mock Partner User
 const MOCK_PARTNER_USER: AuthUser = {
     id: 'p_1',
     name: 'Karim Service',
@@ -76,22 +77,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Migration Helper: Fix Sector if it doesn't exist in current RULES
+  // Migration Helper: Fix Sector if it doesn't exist in current RULES or migrate string to array
   const migrateUserStore = (u: AuthUser): AuthUser => {
-    if (u.type !== 'pro' || !u.sector) return u;
+    if (u.type !== 'pro') return u;
 
-    // Check if sector exists in V1.5 rules
-    if (!SECTOR_RULES[u.sector]) {
-        console.warn(`[Migration] Sector '${u.sector}' not found. Migrating...`);
-        let newSector = 'commerce'; // Default fallback
-        
-        // Simple mapping logic for old sectors
-        if (u.sector === 'transport') newSector = 'auto_vente';
-        if (u.sector === 'vehicules') newSector = 'auto_vente';
-        
-        return { ...u, sector: newSector };
+    let updatedUser = { ...u };
+
+    // 1. Migrate single sector to array if missing
+    if (!updatedUser.sectors && updatedUser.sector) {
+        updatedUser.sectors = [updatedUser.sector];
     }
-    return u;
+
+    // 2. Validate sectors exist in V3 Rules
+    if (updatedUser.sectors) {
+        const validSectors = updatedUser.sectors.map(s => {
+            if (SECTOR_RULES[s]) return s;
+            // Map legacy
+            if (s === 'transport') return 'auto_vente';
+            if (s === 'vehicules') return 'auto_vente';
+            if (s === 'commerce') return 'retail';
+            return null;
+        }).filter(Boolean) as string[];
+        
+        if (validSectors.length === 0) validSectors.push('retail'); // Fallback
+        updatedUser.sectors = validSectors;
+    }
+
+    return updatedUser;
   };
 
   // 1. Load user from localStorage on mount
@@ -124,7 +136,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 2.5 Debug Login (For Test Accounts)
   const debugLogin = (storeId: string) => {
-    // Special case for Partner Debug
     if (storeId === 'p_1') {
         setUser(MOCK_PARTNER_USER);
         localStorage.setItem('wk_auth_user', JSON.stringify(MOCK_PARTNER_USER));
@@ -143,9 +154,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       verified: store.verified || false,
       storeId: store.id,
       package_slug: store.package_slug,
-      sector: store.sector,
+      sectors: store.sectors,
       categories: store.categories,
-      // Ensure expiration date is set for testing active status
       package_updated_at: new Date().toISOString(),
       package_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
@@ -166,7 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const now = new Date();
     const expiresAt = new Date();
-    expiresAt.setDate(now.getDate() + 30); // 30 days subscription
+    expiresAt.setDate(now.getDate() + 30); 
 
     const updatedUser: AuthUser = {
       ...user,
@@ -177,9 +187,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setUser(updatedUser);
     localStorage.setItem('wk_auth_user', JSON.stringify(updatedUser));
-    
-    // In a real app, we would also update the MOCK_STORES or backend here
-    console.log(`[DB] Updated Store ${user.storeId} with pack ${packSlug}. Expires: ${expiresAt.toISOString()}`);
   };
 
   // 5. Upgrade to Pro (Phase 2)
@@ -193,14 +200,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedUser: AuthUser = {
       ...user,
       type: 'pro',
-      storeId: 'u_' + Date.now(), // Generate a mock store ID
+      storeId: 'u_' + Date.now(), 
       package_slug: 'free',
       package_updated_at: now.toISOString(),
       package_expires_at: expiresAt.toISOString(),
-      name: storeData.storeName || user.name, // Use store name if provided
-      sector: storeData.sector,
+      name: storeData.storeName || user.name, 
+      sectors: storeData.sectors, // Array
       categories: storeData.categories,
-      // In a real app we'd save other storeData fields (category, phone, wilaya) to a separate store record
     };
 
     setUser(updatedUser);
@@ -214,12 +220,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedUser: AuthUser = {
           ...user,
           isPartner: true,
-          partnerStatus: 'pending', // Step 2: pending validation
-          partnerPlan: 'partner_free' // Default
+          partnerStatus: 'pending', 
+          partnerPlan: 'partner_free' 
       };
       setUser(updatedUser);
       localStorage.setItem('wk_auth_user', JSON.stringify(updatedUser));
-      console.log('[DB] User applied for Partner', data);
   };
 
   // 7. Update Partner Plan (Step 3: Subscription)
@@ -228,12 +233,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedUser: AuthUser = {
           ...user,
           partnerPlan: plan,
-          partnerStatus: 'approved', // Auto-approve for demo/payment success
+          partnerStatus: 'approved', 
           partnerSubscriptionDate: new Date().toISOString()
       };
       setUser(updatedUser);
       localStorage.setItem('wk_auth_user', JSON.stringify(updatedUser));
-      console.log(`[DB] Partner plan updated to ${plan}`);
   };
 
   return (

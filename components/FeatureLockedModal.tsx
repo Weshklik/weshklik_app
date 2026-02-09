@@ -64,14 +64,14 @@ export const FeatureLockedModal: React.FC<FeatureLockedModalProps> = ({
           {secondaryAction ? (
             <button 
               onClick={secondaryAction.onClick}
-              className="w-full py-2.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm"
+              className="w-full py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-bold border border-gray-200 dark:border-gray-700 transition-colors text-sm"
             >
               {secondaryAction.label}
             </button>
           ) : (
             <button 
               onClick={onClose}
-              className="w-full py-2.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm"
+              className="w-full py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-bold border border-gray-200 dark:border-gray-700 transition-colors text-sm"
             >
               Fermer
             </button>

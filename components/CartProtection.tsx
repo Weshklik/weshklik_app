@@ -49,7 +49,7 @@ export const CartConflictModal: React.FC<ConflictModalProps> = ({
            
            <button 
              onClick={onClose}
-             className="w-full py-2.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm"
+             className="w-full py-2.5 text-gray-700 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors"
            >
              Annuler
            </button>
@@ -78,7 +78,7 @@ export const CartSuccessToast: React.FC<CartSuccessToastProps> = ({ show, onClos
                     <h4 className="font-bold text-gray-900 dark:text-white text-sm">Ajouté au panier !</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Continuez vos achats ou commandez.</p>
                 </div>
-                <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                     <Icons.X className="w-4 h-4" />
                 </button>
             </div>
