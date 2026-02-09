@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* On définit les couleurs personnalisées pour qu'elles soient disponibles. On peut en rajouter d'autres */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-900: #1e3a8a;
+
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+
+  /* On définit la police par défaut */
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+}
+
+/* Tes styles utilitaires spécifiques */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}

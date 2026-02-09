@@ -264,7 +264,7 @@ export const BookingCheckout: React.FC = () => {
                  
                  <div className="flex justify-between items-end mb-1">
                     <span className="text-gray-500 dark:text-gray-400">Total</span>
-                    <span className="font-bold text-2xl text-gray-900 dark:text-white">
+                    <span className="font-bold text-xl text-accent-500 dark:text-white">
                         {formatCurrency(isCartMode ? cartTotal : (breakdown?.totalDZD || 0), 'DZD')}
                     </span>
                  </div>
