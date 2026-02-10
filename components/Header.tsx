@@ -263,6 +263,8 @@ export const Header: React.FC = () => {
             >
                 <Icons.Handshake className="w-6 h-6" />
                 <span className="text-sm font-medium hidden lg:block">Partenaire Achat</span>
+            </Link>
+            <Link
                 to="/favorites"
                 className="p-2.5 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                 title="Favoris"

@@ -9,6 +9,9 @@ import { useAuth } from '../context/AuthContext';
 // --- CONFIGURATION ---
 const ENABLE_MOBILE_CATEGORIES_IN_HEADER = true; 
 const ENABLE_WESHKLIK_VALUE_BLOCKS = false; 
+// --- FEATURE FLAGS ---
+const ENABLE_UNIVERSE_COLOR_REFACTOR = true;
+
 
 // --- DATA: HERO SLIDES (VACATION & RENTALS THEME) ---
 const HERO_SLIDES = [
@@ -246,7 +249,6 @@ export const Home: React.FC = () => {
   const ICON_STYLES = ENABLE_UNIVERSE_COLOR_REFACTOR ? ICON_STYLES_REFACTOR : ICON_STYLES_LEGACY;
 
   // --- VALUE BLOCKS DATA ---
-  const VALUE_BLOCKS = [
   const UNIVERSE_CARDS = [
     {
       id: 'marketplace',
