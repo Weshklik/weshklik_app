@@ -83,7 +83,8 @@ import {
   Eye,
   RotateCcw,
   UserCheck,
-  Package
+  Package,
+  LandmarkIcon
 } from 'lucide-react';
 
 export const Icons = {
@@ -170,5 +171,6 @@ export const Icons = {
   Eye,
   RotateCcw,
   UserCheck,
-  Package
+  Package,
+  LandmarkIcon
 };

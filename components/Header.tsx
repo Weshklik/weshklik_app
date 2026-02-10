@@ -107,7 +107,7 @@ export const Header: React.FC = () => {
   // --- CTA LOGIC (Action Context) ---
   let ctaConfig = {
     path: '/post',
-    colorClass: 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/30'
+    colorClass: 'bg-orange-500 hover:bg-orange-600 text-white shadow-brand-500/30'
   };
 
   if (isImportUniverse) {
@@ -161,8 +161,8 @@ export const Header: React.FC = () => {
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-1 group">
-              <div className="bg-brand-600 text-white p-1.5 rounded-lg group-hover:scale-105 transition-transform">
-                <Icons.Store className="w-5 h-5 md:w-6 md:h-6" />
+              <div className="bg-orange-500 text-white p-1.5 rounded-lg group-hover:scale-105 transition-transform">
+                <Icons.LandmarkIcon className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <span className="text-lg md:text-xl font-bold text-brand-900 dark:text-white tracking-tight hidden sm:block">
                 Wesh<span className="text-brand-600">Klik</span>
@@ -221,11 +221,11 @@ export const Header: React.FC = () => {
             {/* NEW: Partner d'Achat Icon */}
             <Link 
               to="/find-partner"
-              className="p-2.5 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors hidden md:flex"
-              title="Partenaires d'Achat"
+              className="hidden md:flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all"
+              title="Devenez Partenaire Achat"
             >
-              <Icons.Handshake className="w-5 h-5 md:w-6 md:h-6" />
-            </Link>
+                <Icons.Handshake className="w-6 h-6" />
+            </Link>            
 
             {/* 2. Cart / Partner Service (Icon Only) */}
             <Link 
@@ -256,14 +256,6 @@ export const Header: React.FC = () => {
             )}
 
             {/* 4. Favorites (Icon Only - Mobile & Desktop) */}
-            <Link 
-              to="/find-partner"
-              className="hidden md:flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              title="Devenez Partenaire Achat"
-            >
-                <Icons.Handshake className="w-6 h-6" />
-                <span className="text-sm font-medium hidden lg:block">Partenaire Achat</span>
-            </Link>
             <Link
                 to="/favorites"
                 className="p-2.5 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
